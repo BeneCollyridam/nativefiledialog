@@ -17,11 +17,17 @@ jobs:
     - name: Install gtk3
       run: sudo apt-get install -y libgtk-3-dev
 
-    - name: Build library
+    - name: Build static library
       run: cd build/gmake_linux && make
-    - name: Expose static library
+    - name: Build dynamic library
+      run: |
+        cd build/gmake_linux
+        gcc -fPIC  -MMD -MP -DNDEBUG -I../../src/include -m64 -O2 -Wall -Wextra -fno-exceptions `pkg-config --cflags gtk+-3.0`  -o "../obj/x64/Release/nfd/nfd_gtk.o" -MF "../obj/x64/Release/nfd/nfd_gtk.d" -c "../../src/nfd_gtk.c"
+        gcc -fPIC  -MMD -MP -DNDEBUG -I../../src/include -m64 -O2 -Wall -Wextra -fno-exceptions `pkg-config --cflags gtk+-3.0`  -o "../obj/x64/Release/nfd/nfd_common.o" -MF "../obj/x64/Release/nfd/nfd_common.d" -c "../../src/nfd_common.c"
+        gcc -shared ../obj/x64/Release/nfd/nfd_common.o ../obj/x64/Release/nfd/nfd_gtk.o -o ../lib/Release/x64/libnfd.so
+    - name: Expose static and dynamic library
       uses: actions/upload-artifact@v3
       with:
-        name: static-lib
+        name: lib
         path: |
           build/lib
